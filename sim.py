@@ -47,7 +47,6 @@ class PlaceData:
 class Pandemic:
     def __init__(self):
         self.day = 0
-        self.action_count = 0
         self.action_budget = c.ACTION_BUDGET_BEGINNING
         self.days_since_last_infection = 0
         self.network = nx.barabasi_albert_graph(c.PLACE_COUNT, 2)
@@ -88,6 +87,17 @@ class Pandemic:
     def update(self):
         self.day += 1
 
+        # update days since last infection
+        total_infections = 0
+        for place_data in self.cities.values():
+            total_infections += place_data.infected
+
+        if total_infections > 0:
+            self.days_since_last_infection = 0
+        else:
+            self.days_since_last_infection += 1
+
+        # update action budget
         if self.day < c.MIDDLE_CUTOFF:
             self.action_budget = c.ACTION_BUDGET_BEGINNING
         elif self.day < c.END_CUTOFF:
@@ -274,6 +284,13 @@ class Pandemic:
 
         # Show the plot
         plt.show()
+
+    @property
+    def action_count(self):
+        action_count = 0
+        for place in self.cities.values():
+            action_count += sum(place.control_measures.values())
+        return action_count
 
 
 if __name__ == "__main__":

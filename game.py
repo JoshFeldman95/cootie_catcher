@@ -42,21 +42,7 @@ class App:
         for place in self.places:
             place.update(self.sim)
 
-        self.sim.action_count = 0
-        for place in self.places:
-            for action in c.ACTIONS:
-                self.sim.action_count += place.checkboxes[action].is_checked
-
         if self.next_button.is_clicked():
-            total_infections = 0
-            for place in self.places:
-                total_infections += place.place.infected
-
-            if total_infections > 0:
-                self.sim.days_since_last_infection = 0
-            else:
-                self.sim.days_since_last_infection += 1
-
             self.sim.update()  # Update simulation only if next button is pressed
 
     def draw(self):
