@@ -38,13 +38,6 @@ class Button(Clickable):
 
 
 class Checkbox(Clickable):
-    def __init__(self, is_checked):
-        self.x = 0
-        self.y = 0
-        self.width = 0
-        self.height = 0
-        self.is_checked = is_checked
-
     def draw(self, x, y, size):
         self.x = x
         self.y = y
@@ -57,6 +50,15 @@ class Checkbox(Clickable):
             pyxel.rect(self.x, self.y, self.width, self.height, c.SELECTED_COLOR)
         else:
             pyxel.rect(self.x, self.y, self.width, self.height, c.DARK)
+
+
+class ActionCheckbox(Checkbox):
+    def __init__(self, is_checked):
+        self.x = 0
+        self.y = 0
+        self.width = 0
+        self.height = 0
+        self.is_checked = is_checked
 
     def update(self, actions_remaining):
         if self.is_clicked():
@@ -71,10 +73,14 @@ class Place(Hoverable):
     def __init__(self, place, x, y, width, height):
         self.place = place
         self.checkboxes = {
-            "restrict_travel": Checkbox(place.control_measures["restrict_travel"]),
-            "mass_testing": Checkbox(place.control_measures["mass_testing"]),
-            "contact_tracing": Checkbox(place.control_measures["contact_tracing"]),
-            "lockdown": Checkbox(place.control_measures["lockdown"]),
+            "restrict_travel": ActionCheckbox(
+                place.control_measures["restrict_travel"]
+            ),
+            "mass_testing": ActionCheckbox(place.control_measures["mass_testing"]),
+            "contact_tracing": ActionCheckbox(
+                place.control_measures["contact_tracing"]
+            ),
+            "lockdown": ActionCheckbox(place.control_measures["lockdown"]),
         }
         self.x = x
         self.y = y
