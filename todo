@@ -1,0 +1,22 @@
+- refactor codebase
+- create infobox componenet
+- add infoboxes to help the user know what's going on + add narrative
+- explain what categories are
+- add randomize button
+- add clear all button
+- add map
+- add tooltips so player knows what each thing does
+- add epi curves 
+- indicate last test
+
+
+user action -> state update -> draw
+
+update:
+    check for action
+
+    if action:
+        event.fire()
+
+event.fire:
+    update state
