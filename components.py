@@ -38,10 +38,7 @@ class Button(Clickable):
 
 
 class Checkbox(Clickable):
-    def draw(
-        self,
-    ):
-
+    def draw(self):
         if self.is_hovered():
             pyxel.rect(self.x, self.y, self.width, self.height, c.HIGHLIGHT_COLOR_DARK)
         elif self.is_checked:
@@ -138,11 +135,11 @@ class Place(Hoverable):
 
 
 class GameStats:
-    def draw(self, sim, days_since_last_infection, pct_homeschooled):
+    def draw(self, sim):
         pyxel.text(
             c.BORDER,
             c.SCREEN_HEIGHT - c.BORDER - 40,
-            f"Days since last infection: {days_since_last_infection} ({c.WIN_THRESHOLD- days_since_last_infection} more to win!)",
+            f"Days since last infection: {sim.days_since_last_infection} ({c.WIN_THRESHOLD- sim.days_since_last_infection} more to win!)",
             c.DARK,
         )
         pyxel.text(
@@ -155,7 +152,7 @@ class GameStats:
         pyxel.text(
             c.BORDER,
             c.SCREEN_HEIGHT - c.BORDER - 10,
-            f"Homeschooled: {pct_homeschooled} % (Lose at {c.LOSE_THRESHOLD}%)",
+            f"Homeschooled: {sim.pct_dead} % (Lose at {c.LOSE_THRESHOLD}%)",
             c.DARK,
         )
 

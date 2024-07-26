@@ -51,9 +51,7 @@ class App:
             self.win()
             return
 
-        totals = self.sim.get_totals()
-        pct_homeschooled = int((1 - totals.alive() / totals.population()) * 100)
-        if pct_homeschooled >= c.LOSE_THRESHOLD:
+        if self.sim.pct_dead >= c.LOSE_THRESHOLD:
             self.lose()
             return
 
@@ -68,8 +66,6 @@ class App:
         # display stats
         self.stats.draw(
             sim=self.sim,
-            days_since_last_infection=self.sim.days_since_last_infection,
-            pct_homeschooled=pct_homeschooled,
         )
 
     def win(self):

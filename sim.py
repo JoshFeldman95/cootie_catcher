@@ -292,6 +292,11 @@ class Pandemic:
             action_count += sum(place.control_measures.values())
         return action_count
 
+    @property
+    def pct_dead(self):
+        totals = self.get_totals()
+        return int((1 - totals.alive() / totals.population()) * 100)
+
 
 if __name__ == "__main__":
 
