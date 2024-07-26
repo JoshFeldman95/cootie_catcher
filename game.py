@@ -41,7 +41,8 @@ class App:
     def update(self):
         for place in self.places:
             place.update(
-                actions_remaining=self.sim.action_budget - self.sim.action_count
+                self.sim,
+                actions_remaining=self.sim.action_budget - self.sim.action_count,
             )
 
         self.sim.action_count = 0
@@ -53,10 +54,6 @@ class App:
             total_infections = 0
             for place in self.places:
                 total_infections += place.place.infected
-                for action in c.ACTIONS:
-                    self.sim.cities[place.place.place_name].control_measures[action] = (
-                        place.checkboxes[action].is_checked
-                    )
 
             if total_infections > 0:
                 self.sim.days_since_last_infection = 0

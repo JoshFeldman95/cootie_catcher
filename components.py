@@ -38,11 +38,9 @@ class Button(Clickable):
 
 
 class Checkbox(Clickable):
-    def draw(self, x, y, size):
-        self.x = x
-        self.y = y
-        self.width = size
-        self.height = size
+    def draw(
+        self,
+    ):
 
         if self.is_hovered():
             pyxel.rect(self.x, self.y, self.width, self.height, c.HIGHLIGHT_COLOR_DARK)
@@ -53,39 +51,64 @@ class Checkbox(Clickable):
 
 
 class ActionCheckbox(Checkbox):
-    def __init__(self, is_checked):
-        self.x = 0
-        self.y = 0
-        self.width = 0
-        self.height = 0
-        self.is_checked = is_checked
+    def __init__(self, x, y, size, place_name, action_name):
+        self.x = x
+        self.y = y
+        self.width = size
+        self.height = size
+        self.place_name = place_name
+        self.action_name = action_name
+        self.is_checked = False
 
-    def update(self, actions_remaining):
+    def update(self, sim, actions_remaining):
         if self.is_clicked():
             if not self.is_checked and actions_remaining > 0:
                 self.is_checked = True
+                sim.cities[self.place_name].control_measures[self.action_name] = True
 
             elif self.is_checked:
                 self.is_checked = False
+                sim.cities[self.place_name].control_measures[self.action_name] = False
 
 
 class Place(Hoverable):
     def __init__(self, place, x, y, width, height):
         self.place = place
-        self.checkboxes = {
-            "restrict_travel": ActionCheckbox(
-                place.control_measures["restrict_travel"]
-            ),
-            "mass_testing": ActionCheckbox(place.control_measures["mass_testing"]),
-            "contact_tracing": ActionCheckbox(
-                place.control_measures["contact_tracing"]
-            ),
-            "lockdown": ActionCheckbox(place.control_measures["lockdown"]),
-        }
         self.x = x
         self.y = y
         self.width = width
         self.height = height
+
+        self.checkboxes = {
+            "restrict_travel": ActionCheckbox(
+                x=c.COL_WIDTH * (6 + 0) + c.BORDER,
+                y=self.y + 2,
+                size=5,
+                place_name=place.place_name,
+                action_name="restrict_travel",
+            ),
+            "mass_testing": ActionCheckbox(
+                x=c.COL_WIDTH * (6 + 1) + c.BORDER,
+                y=self.y + 2,
+                size=5,
+                place_name=place.place_name,
+                action_name="mass_testing",
+            ),
+            "contact_tracing": ActionCheckbox(
+                x=c.COL_WIDTH * (6 + 2) + c.BORDER,
+                y=self.y + 2,
+                size=5,
+                place_name=place.place_name,
+                action_name="contact_tracing",
+            ),
+            "lockdown": ActionCheckbox(
+                x=c.COL_WIDTH * (6 + 3) + c.BORDER,
+                y=self.y + 2,
+                size=5,
+                place_name=place.place_name,
+                action_name="lockdown",
+            ),
+        }
 
     def draw(self):
         if self.is_hovered():
@@ -106,13 +129,11 @@ class Place(Hoverable):
             pyxel.text(c.COL_WIDTH * idx + c.BORDER, self.y + 2, str(f), color)
 
         for idx, action in enumerate(self.checkboxes):
-            self.checkboxes[action].draw(
-                x=c.COL_WIDTH * (6 + idx) + c.BORDER, y=self.y + 2, size=5
-            )
+            self.checkboxes[action].draw()
 
-    def update(self, actions_remaining):
+    def update(self, sim, actions_remaining):
         for checkbox in self.checkboxes.values():
-            checkbox.update(actions_remaining)
+            checkbox.update(sim, actions_remaining)
 
 
 class GameStats:
