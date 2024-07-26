@@ -40,10 +40,7 @@ class App:
 
     def update(self):
         for place in self.places:
-            place.update(
-                self.sim,
-                actions_remaining=self.sim.action_budget - self.sim.action_count,
-            )
+            place.update(self.sim)
 
         self.sim.action_count = 0
         for place in self.places:

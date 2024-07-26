@@ -60,9 +60,10 @@ class ActionCheckbox(Checkbox):
         self.action_name = action_name
         self.is_checked = False
 
-    def update(self, sim, actions_remaining):
+    def update(self, sim):
+        is_checkable = sim.action_budget - sim.action_count > 0
         if self.is_clicked():
-            if not self.is_checked and actions_remaining > 0:
+            if not self.is_checked and is_checkable > 0:
                 self.is_checked = True
                 sim.cities[self.place_name].control_measures[self.action_name] = True
 
@@ -131,9 +132,9 @@ class Place(Hoverable):
         for idx, action in enumerate(self.checkboxes):
             self.checkboxes[action].draw()
 
-    def update(self, sim, actions_remaining):
+    def update(self, sim):
         for checkbox in self.checkboxes.values():
-            checkbox.update(sim, actions_remaining)
+            checkbox.update(sim)
 
 
 class GameStats:
