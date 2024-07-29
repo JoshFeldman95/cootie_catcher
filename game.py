@@ -5,10 +5,11 @@ from components import (
     GameStats,
     Heading,
     Place,
-    Button,
+    NextDayButton,
     IntroInfoBox,
     MiddleGameInfoBox,
     EndGameInfoBox,
+    Map,
 )
 
 
@@ -30,6 +31,7 @@ class App:
         self.sim = Pandemic()
         self.stats = GameStats()
         self.heading = Heading()
+        self.map = Map()
         self.intro = IntroInfoBox(filename="intro.txt")
         self.middle_game_info = MiddleGameInfoBox(filename="middle_game.txt")
         self.end_game_info = EndGameInfoBox(filename="end_game.txt")
@@ -46,12 +48,7 @@ class App:
             for idx, place_data in enumerate(self.sim.cities.values())
         ]
 
-        self.next_button = Button(
-            x=c.SCREEN_WIDTH - 40,
-            y=c.SCREEN_HEIGHT - 30,
-            text="Next >",
-        )
-
+        self.next_button = NextDayButton()
         pyxel.run(self.update, self.draw)
 
     def update(self):
@@ -62,8 +59,7 @@ class App:
         for place in self.places:
             place.update(self.sim)
 
-        if self.next_button.is_clicked():
-            self.sim.update()  # Update simulation only if next button is pressed
+        self.next_button.update(self.sim)
 
     def draw(self):
         pyxel.cls(c.BACKGROUND_COLOR)

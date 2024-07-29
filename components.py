@@ -56,6 +56,26 @@ class Button(Clickable):
         )
 
 
+class NextDayButton(Button):
+    def __init__(self):
+        next_button_text = "Call it a day >"
+        self.next_button = Button(
+            x=c.SCREEN_WIDTH
+            - len(next_button_text) * c.CHARACTER_WIDTH
+            - Button.text_padding * 2
+            - c.BORDER,
+            y=c.SCREEN_HEIGHT - 20,
+            text=next_button_text,
+        )
+
+    def draw(self):
+        self.next_button.draw()
+
+    def update(self, sim):
+        if self.next_button.is_clicked():
+            sim.update()  # Update simulation only if next button is pressed
+
+
 class InfoBox:
     def __init__(self, filename=None, text=None):
         if filename:
