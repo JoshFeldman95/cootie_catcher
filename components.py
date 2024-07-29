@@ -1,5 +1,7 @@
 import pyxel
 import consts as c
+import textwrap
+import time
 
 
 class Hoverable:
@@ -19,12 +21,24 @@ class Clickable(Hoverable):
 
 
 class Button(Clickable):
-    def __init__(self, x, y, width, height, text):
+    text_padding = 5
+    height = c.CHARACTER_HEIGHT + text_padding * 2
+
+    def __init__(self, text, x=None, y=None):
+        if not x:
+            x = (
+                c.SCREEN_WIDTH / 2
+                - len(text) * c.CHARACTER_WIDTH / 2
+                - self.text_padding
+            )
         self.x = x
+
+        if not y:
+            y = c.SCREEN_HEIGHT / 2 - c.CHARACTER_HEIGHT / 2 - self.text_padding
         self.y = y
-        self.width = width
-        self.height = height
+
         self.text = text
+        self.width = len(text) * c.CHARACTER_WIDTH + self.text_padding * 2
 
     def draw(
         self,
@@ -34,20 +48,91 @@ class Button(Clickable):
         else:
             pyxel.rect(self.x, self.y, self.width, self.height, c.HIGHLIGHT_COLOR_LIGHT)
 
-        pyxel.text(self.x + 5, self.y + 2, self.text, c.DARK)
+        pyxel.text(
+            x=self.x + self.text_padding,
+            y=self.y + self.text_padding,
+            s=self.text,
+            col=c.DARK,
+        )
 
 
-class Checkbox(Clickable):
-    def draw(self):
-        if self.is_hovered():
-            pyxel.rect(self.x, self.y, self.width, self.height, c.HIGHLIGHT_COLOR_DARK)
-        elif self.is_checked:
-            pyxel.rect(self.x, self.y, self.width, self.height, c.SELECTED_COLOR)
+class InfoBox:
+    def __init__(self, filename=None, text=None):
+        if filename:
+            with open(filename, "r") as file:
+                text = file.read()
         else:
-            pyxel.rect(self.x, self.y, self.width, self.height, c.DARK)
+            if not text:
+                raise ValueError("Either filename or text must be provided")
+
+        # constants
+        self.is_shown = False
+        self.characters_per_line = 30
+        self.character_width = 4
+        self.character_height = 6
+        self.padding = 10
+        self.padding_between_text_and_button = 10
+        self.text = textwrap.fill(text, width=self.characters_per_line)
+        text_height = self.text.count("\n") * c.CHARACTER_HEIGHT
+        text_width = self.characters_per_line * c.CHARACTER_WIDTH
+
+        self.text_drawn = 0
+        self.time_elapsed = 0
+
+        self.width = self.padding + text_width + self.padding
+        self.height = (
+            self.padding
+            + text_height
+            + self.padding_between_text_and_button
+            + Button.height
+            + self.padding
+        )
+
+        # Position the middle of the box at the center of the screen
+        self.x = c.SCREEN_WIDTH / 2 - self.width / 2
+        self.y = c.SCREEN_HEIGHT / 2 - self.height / 2
+
+        self.next_button = Button(
+            y=self.y + self.height - Button.height - self.padding,
+            text="Next >",
+        )
+
+    def draw(self):
+        self.is_shown = True
+
+        # every 10 milliseconds, draw one more character
+        if self.text_drawn < len(self.text) and time.time() - self.time_elapsed > 0.005:
+            self.text_drawn += 1
+            self.time_elapsed = time.time()
+        text_to_draw = self.text[: self.text_drawn]
+
+        pyxel.rect(self.x, self.y, self.width, self.height, c.LIGHT)
+        pyxel.text(self.x + self.padding, self.y + self.padding, text_to_draw, c.DARK)
+        self.next_button.draw()
+
+    def is_clicked(self):
+        return self.is_shown and self.next_button.is_clicked()
 
 
-class ActionCheckbox(Checkbox):
+class IntroInfoBox(InfoBox):
+    def update(self, game_state):
+        if self.is_clicked():
+            game_state.intro_screen_shown = True
+
+
+class MiddleGameInfoBox(InfoBox):
+    def update(self, game_state):
+        if self.is_clicked():
+            game_state.middle_game_screen_shown = True
+
+
+class EndGameInfoBox(InfoBox):
+    def update(self, game_state):
+        if self.is_clicked():
+            game_state.end_game_screen_shown = True
+
+
+class ActionCheckbox(Clickable):
     def __init__(self, x, y, size, place_name, action_name):
         self.x = x
         self.y = y
@@ -55,17 +140,25 @@ class ActionCheckbox(Checkbox):
         self.height = size
         self.place_name = place_name
         self.action_name = action_name
-        self.is_checked = False
+
+    def draw(self, sim):
+        if self.is_hovered():
+            pyxel.rect(self.x, self.y, self.width, self.height, c.HIGHLIGHT_COLOR_DARK)
+        elif self.is_checked(sim):
+            pyxel.rect(self.x, self.y, self.width, self.height, c.SELECTED_COLOR)
+        else:
+            pyxel.rect(self.x, self.y, self.width, self.height, c.DARK)
+
+    def is_checked(self, sim):
+        return sim.cities[self.place_name].control_measures[self.action_name]
 
     def update(self, sim):
         is_checkable = sim.action_budget - sim.action_count > 0
         if self.is_clicked():
-            if not self.is_checked and is_checkable > 0:
-                self.is_checked = True
+            if not self.is_checked(sim) and is_checkable:
                 sim.cities[self.place_name].control_measures[self.action_name] = True
 
-            elif self.is_checked:
-                self.is_checked = False
+            elif self.is_checked(sim):
                 sim.cities[self.place_name].control_measures[self.action_name] = False
 
 
@@ -78,56 +171,50 @@ class Place(Hoverable):
         self.height = height
 
         self.checkboxes = {
-            "restrict_travel": ActionCheckbox(
-                x=c.COL_WIDTH * (6 + 0) + c.BORDER,
+            action: ActionCheckbox(
+                x=c.COL_WIDTH * (6 + idx + 1)
+                + c.BORDER,  # 6 is the number of columns before the action columns
                 y=self.y + 2,
                 size=5,
                 place_name=place.place_name,
-                action_name="restrict_travel",
-            ),
-            "mass_testing": ActionCheckbox(
-                x=c.COL_WIDTH * (6 + 1) + c.BORDER,
-                y=self.y + 2,
-                size=5,
-                place_name=place.place_name,
-                action_name="mass_testing",
-            ),
-            "contact_tracing": ActionCheckbox(
-                x=c.COL_WIDTH * (6 + 2) + c.BORDER,
-                y=self.y + 2,
-                size=5,
-                place_name=place.place_name,
-                action_name="contact_tracing",
-            ),
-            "lockdown": ActionCheckbox(
-                x=c.COL_WIDTH * (6 + 3) + c.BORDER,
-                y=self.y + 2,
-                size=5,
-                place_name=place.place_name,
-                action_name="lockdown",
-            ),
+                action_name=action,
+            )
+            for idx, action in enumerate(c.ACTIONS)
         }
 
-    def draw(self):
-        if self.is_hovered():
-            pyxel.rect(self.x, self.y, self.width, self.height, c.HIGHLIGHT_COLOR_LIGHT)
-
+    def draw(self, sim):
         fields = (
             self.place.place_name,
             self.place.susceptible + self.place.exposed + self.place.infected,
             self.place.detected,
             self.place.treated,
             self.place.dead,
+            self.place.anger,
         )
+
+        if self.is_hovered():
+            pyxel.rect(self.x, self.y, self.width, self.height, c.HIGHLIGHT_COLOR_LIGHT)
+
         for idx, f in enumerate(fields):
             color = c.DARK if f == 0 or idx < 2 else c.ALERT_COLOR
 
-            if idx > 0:
+            if idx > 0:  # two columns for the place name
                 idx += 1
-            pyxel.text(c.COL_WIDTH * idx + c.BORDER, self.y + 2, str(f), color)
+
+            if idx == 6:
+                stat_str = (
+                    f"{f}/5"
+                    if not self.place.in_backlash
+                    else f"Parents are pissed! ({f} turns remaining)"
+                )
+            else:
+                stat_str = str(f)
+
+            pyxel.text(c.COL_WIDTH * idx + c.BORDER, self.y + 2, stat_str, color)
 
         for idx, action in enumerate(self.checkboxes):
-            self.checkboxes[action].draw()
+            if not self.place.in_backlash:
+                self.checkboxes[action].draw(sim)
 
     def update(self, sim):
         for checkbox in self.checkboxes.values():
@@ -165,6 +252,7 @@ class Heading:
             "Caught Cooties",
             "Treated",
             "Homeschooled",
+            "Parent Anger",
             "Ban Playdates",
             "Test the Class",
             "Quarantine",

@@ -1,6 +1,4 @@
-- refactor codebase
-- create infobox componenet
-- add infoboxes to help the user know what's going on + add narrative
+- only let things be clicked if visible
 - explain what categories are
 - add randomize button
 - add clear all button

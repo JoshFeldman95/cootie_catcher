@@ -1,7 +1,21 @@
 import pyxel
 from sim import Pandemic
 import consts as c
-from components import GameStats, Heading, Place, Button
+from components import (
+    GameStats,
+    Heading,
+    Place,
+    Button,
+    IntroInfoBox,
+    MiddleGameInfoBox,
+    EndGameInfoBox,
+)
+
+
+class GameState:
+    intro_screen_shown = False
+    middle_game_screen_shown = False
+    end_game_screen_shown = False
 
 
 class App:
@@ -12,9 +26,13 @@ class App:
         pyxel.playm(0, loop=True)
         pyxel.mouse(True)
 
+        self.game_state = GameState()
         self.sim = Pandemic()
         self.stats = GameStats()
         self.heading = Heading()
+        self.intro = IntroInfoBox(filename="intro.txt")
+        self.middle_game_info = MiddleGameInfoBox(filename="middle_game.txt")
+        self.end_game_info = EndGameInfoBox(filename="end_game.txt")
 
         y_init = c.ROW_HEIGHT + c.BORDER
         self.places = [
@@ -31,14 +49,16 @@ class App:
         self.next_button = Button(
             x=c.SCREEN_WIDTH - 40,
             y=c.SCREEN_HEIGHT - 30,
-            width=30,
-            height=15,
-            text="Next",
+            text="Next >",
         )
 
         pyxel.run(self.update, self.draw)
 
     def update(self):
+        self.intro.update(self.game_state)
+        self.middle_game_info.update(self.game_state)
+        self.end_game_info.update(self.game_state)
+
         for place in self.places:
             place.update(self.sim)
 
@@ -47,6 +67,7 @@ class App:
 
     def draw(self):
         pyxel.cls(c.BACKGROUND_COLOR)
+
         if self.sim.days_since_last_infection == c.WIN_THRESHOLD:
             self.win()
             return
@@ -55,10 +76,24 @@ class App:
             self.lose()
             return
 
+        if not self.game_state.intro_screen_shown:
+            self.intro.draw()
+            return
+
+        if (
+            not self.game_state.middle_game_screen_shown
+        ) and self.sim.day == c.MIDDLE_CUTOFF:
+            self.middle_game_info.draw()
+            return
+
+        if (not self.game_state.end_game_screen_shown) and self.sim.day == c.END_CUTOFF:
+            self.end_game_info.draw()
+            return
+
         self.heading.draw()
 
         for place in self.places:
-            place.draw()
+            place.draw(self.sim)
 
         # Draw next button
         self.next_button.draw()

@@ -23,6 +23,8 @@ class PlaceData:
 
     # control measures
     control_measures: dict
+    anger: int = 0
+    in_backlash: bool = False
 
     def population(self):
         return (
@@ -111,6 +113,20 @@ class Pandemic:
     def update_place(self, place):
         if place.alive() == 0:
             return
+
+        # update backlash
+        if place.control_measures["lockdown"]:
+            place.anger += 1
+        elif place.anger > 0:
+            place.anger -= 1
+
+        if place.anger == 0 and place.in_backlash:
+            place.in_backlash = False
+
+        if place.anger == c.ANGER_THRESHOLD:
+            for measure in place.control_measures:
+                place.control_measures[measure] = False
+                place.in_backlash = True
 
         # calculate deltas
 
