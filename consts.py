@@ -5,13 +5,13 @@ PLACE_COUNT = 20
 TRAVEL_RATE = 0.01
 INFECTION_RATE = 0.1
 INCUBATION_RATE = 1 / 3
-DETECTION_RATE = 0.1
+DETECTION_RATE = 0.5
 TREATMENT_RATE = 0.9
 TREATMENT_CAPACITY = 0.01
 MORTALITY_RATE = 0.05
 RECOVERY_RATE = 1 / 7
 CONTACTS = 10
-MASS_TESTING_DETECTION_RATE = 0.95
+MASS_TESTING_DETECTION_RATE = 1
 CONTACT_TRACING_CAPACITY = 50
 
 PLACE_NAMES = [
@@ -70,3 +70,28 @@ ALERT_COLOR = 8
 BACKGROUND_COLOR = 6
 CHARACTER_WIDTH = 4
 CHARACTER_HEIGHT = 6
+
+COLUMNS = [
+    ("School", "The name of the school."),
+    ("Healthy", "The number of healthy kids (so we think...)"),
+    ("Caught Cooties", "The number of kids who we think caught cooties."),
+    (
+        "Treated",
+        "The number of kids undergoing cootie treatment, which will make recovery more likely.",
+    ),
+    (
+        "Homeschooled",
+        "The number of kids who have been pulled from school due to cooties.",
+    ),
+    (
+        "Parent Anger",
+        f"The amount parents are angry. If it gets to {ANGER_THRESHOLD}, watch out. You won't be able to take any more actions for {ANGER_THRESHOLD} turns.",
+    ),
+    ("Ban Playdates", "This will stop kids from spreading cooties to other schools"),
+    ("Test the Class", "Figure out how many kids really have cooties"),
+    (
+        "Quarantine",
+        f"Kids at this school won't spread cooties to other kids at this school, but we can only quarantine {CONTACT_TRACING_CAPACITY} kids.",
+    ),
+    ("Close School", "No new infections! But parents will be angry..."),
+]

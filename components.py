@@ -73,7 +73,7 @@ class InfoBox:
         self.padding = 10
         self.padding_between_text_and_button = 10
         self.text = textwrap.fill(text, width=self.characters_per_line)
-        text_height = self.text.count("\n") * c.CHARACTER_HEIGHT
+        text_height = (self.text.count("\n") + 1) * c.CHARACTER_HEIGHT
         text_width = self.characters_per_line * c.CHARACTER_WIDTH
 
         self.text_drawn = 0
@@ -244,25 +244,54 @@ class GameStats:
         )
 
 
-class Heading:
+class ColumnName(Hoverable):
+    def __init__(self, x, y, s, col, description):
+        self.x = x
+        self.y = y
+        self.width = c.COL_WIDTH
+        self.height = c.ROW_HEIGHT
+        self.text = s
+        self.description = textwrap.fill(
+            description, width=c.COL_WIDTH // c.CHARACTER_WIDTH
+        )
+        self.color = col
+
     def draw(self):
-        column_names = [
-            "Place",
-            "Health",
-            "Caught Cooties",
-            "Treated",
-            "Homeschooled",
-            "Parent Anger",
-            "Ban Playdates",
-            "Test the Class",
-            "Quarantine",
-            "Close School",
-        ]
-        for idx, name in enumerate(column_names):
+        pyxel.text(self.x, self.y, self.text, self.color)
+
+        if self.is_hovered():
+            pyxel.rect(
+                x=self.x - 5,
+                y=self.y + self.height - 5,
+                w=self.width + 10,
+                h=(self.description.count("\n") + 1) * c.CHARACTER_HEIGHT + 10,
+                col=c.DARK,
+            )
+            pyxel.text(self.x, self.y + self.height, self.description, c.LIGHT)
+
+
+class Heading:
+    def __init__(self):
+        self.column_names = []
+        for idx, (name, description) in enumerate(c.COLUMNS):
             if idx > 0:
                 idx += 1
-            pyxel.text(c.COL_WIDTH * idx + c.BORDER, c.BORDER, name, c.DARK)
+
+            self.column_names.append(
+                ColumnName(
+                    x=c.COL_WIDTH * idx + c.BORDER,
+                    y=c.BORDER,
+                    s=name,
+                    col=c.DARK,
+                    description=description,
+                )
+            )
+
+    def draw(self):
 
         pyxel.line(
             0, c.ROW_HEIGHT + c.BORDER, c.SCREEN_WIDTH, c.ROW_HEIGHT + c.BORDER, c.DARK
         )
+
+        for column in self.column_names:
+            column.draw()

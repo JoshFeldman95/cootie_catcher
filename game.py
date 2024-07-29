@@ -90,10 +90,10 @@ class App:
             self.end_game_info.draw()
             return
 
-        self.heading.draw()
-
         for place in self.places:
             place.draw(self.sim)
+
+        self.heading.draw()
 
         # Draw next button
         self.next_button.draw()
