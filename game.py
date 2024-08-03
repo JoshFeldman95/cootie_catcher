@@ -6,9 +6,7 @@ from components import (
     Heading,
     Place,
     NextDayButton,
-    IntroInfoBox,
-    MiddleGameInfoBox,
-    EndGameInfoBox,
+    InfoBox,
 )
 
 from map import Map, MapButton
@@ -33,9 +31,24 @@ class App:
         self.sim = Pandemic()
         self.stats = GameStats()
         self.heading = Heading()
-        self.intro = IntroInfoBox(filename="intro.txt")
-        self.middle_game_info = MiddleGameInfoBox(filename="middle_game.txt")
-        self.end_game_info = EndGameInfoBox(filename="end_game.txt")
+        self.intro = InfoBox(
+            game_state_property="intro_screen_shown",
+            filename="msgs/intro.txt",
+        )
+        self.middle_game_info = InfoBox(
+            game_state_property="middle_game_screen_shown",
+            filename="msgs/middle_game.txt",
+        )
+        self.end_game_info = InfoBox(
+            game_state_property="end_game_screen_shown",
+            filename="msgs/end_game.txt",
+        )
+        self.win = InfoBox(
+            filename="msgs/win.txt",
+        )
+        self.lose = InfoBox(
+            filename="msgs/lose.txt",
+        )
         self.map = Map()
         self.map_button = MapButton()
 
@@ -69,11 +82,11 @@ class App:
         pyxel.cls(c.BACKGROUND_COLOR)
 
         if self.sim.days_since_last_infection == c.WIN_THRESHOLD:
-            self.win()
+            self.win.draw()
             return
 
         if self.sim.pct_dead >= c.LOSE_THRESHOLD:
-            self.lose()
+            self.lose.draw()
             return
 
         if not self.game_state.intro_screen_shown:

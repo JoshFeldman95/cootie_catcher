@@ -57,7 +57,7 @@ class Button(Clickable):
 
 
 class NextDayButton:
-    next_button_text = "Call it a day >"
+    next_button_text = "End Day >"
     x = (
         c.SCREEN_WIDTH
         - len(next_button_text) * c.CHARACTER_WIDTH
@@ -78,82 +78,6 @@ class NextDayButton:
     def update(self, sim):
         if self.next_button.is_clicked():
             sim.update()  # Update simulation only if next button is pressed
-
-
-class InfoBox:
-    def __init__(self, filename=None, text=None):
-        if filename:
-            with open(filename, "r") as file:
-                text = file.read()
-        else:
-            if not text:
-                raise ValueError("Either filename or text must be provided")
-
-        # constants
-        self.is_shown = False
-        self.characters_per_line = 30
-        self.character_width = 4
-        self.character_height = 6
-        self.padding = 10
-        self.padding_between_text_and_button = 10
-        self.text = textwrap.fill(text, width=self.characters_per_line)
-        text_height = (self.text.count("\n") + 1) * c.CHARACTER_HEIGHT
-        text_width = self.characters_per_line * c.CHARACTER_WIDTH
-
-        self.text_drawn = 0
-        self.time_elapsed = 0
-
-        self.width = self.padding + text_width + self.padding
-        self.height = (
-            self.padding
-            + text_height
-            + self.padding_between_text_and_button
-            + Button.height
-            + self.padding
-        )
-
-        # Position the middle of the box at the center of the screen
-        self.x = c.SCREEN_WIDTH / 2 - self.width / 2
-        self.y = c.SCREEN_HEIGHT / 2 - self.height / 2
-
-        self.next_button = Button(
-            y=self.y + self.height - Button.height - self.padding,
-            text="Next >",
-        )
-
-    def draw(self):
-        self.is_shown = True
-
-        # every 10 milliseconds, draw one more character
-        if self.text_drawn < len(self.text) and time.time() - self.time_elapsed > 0.005:
-            self.text_drawn += 1
-            self.time_elapsed = time.time()
-        text_to_draw = self.text[: self.text_drawn]
-
-        pyxel.rect(self.x, self.y, self.width, self.height, c.LIGHT)
-        pyxel.text(self.x + self.padding, self.y + self.padding, text_to_draw, c.DARK)
-        self.next_button.draw()
-
-    def is_clicked(self):
-        return self.is_shown and self.next_button.is_clicked()
-
-
-class IntroInfoBox(InfoBox):
-    def update(self, game_state):
-        if self.is_clicked():
-            game_state.intro_screen_shown = True
-
-
-class MiddleGameInfoBox(InfoBox):
-    def update(self, game_state):
-        if self.is_clicked():
-            game_state.middle_game_screen_shown = True
-
-
-class EndGameInfoBox(InfoBox):
-    def update(self, game_state):
-        if self.is_clicked():
-            game_state.end_game_screen_shown = True
 
 
 class ActionCheckbox(Clickable):
@@ -319,3 +243,68 @@ class Heading:
 
         for column in self.column_names:
             column.draw()
+
+
+class InfoBox:
+    def __init__(self, game_state_property=None, filename=None, text=None):
+        if filename:
+            with open(filename, "r") as file:
+                text = file.read()
+        else:
+            if not text:
+                raise ValueError("Either filename or text must be provided")
+
+        # constants
+        self.game_state_property = game_state_property
+        self.is_shown = False
+        self.characters_per_line = 30
+        self.character_width = 4
+        self.character_height = 6
+        self.padding = 10
+        self.padding_between_text_and_button = 10
+        self.text = textwrap.fill(text, width=self.characters_per_line)
+        text_height = (self.text.count("\n") + 1) * c.CHARACTER_HEIGHT
+        text_width = self.characters_per_line * c.CHARACTER_WIDTH
+
+        self.text_drawn = 0
+        self.time_elapsed = 0
+
+        self.width = self.padding + text_width + self.padding
+        self.height = (
+            self.padding
+            + text_height
+            + self.padding_between_text_and_button
+            + Button.height
+            + self.padding
+        )
+
+        # Position the middle of the box at the center of the screen
+        self.x = c.SCREEN_WIDTH / 2 - self.width / 2
+        self.y = c.SCREEN_HEIGHT / 2 - self.height / 2
+
+        self.next_button = Button(
+            y=self.y + self.height - Button.height - self.padding,
+            text="Next >",
+        )
+
+    def draw(self):
+        self.is_shown = True
+
+        # every 10 milliseconds, draw one more character
+        if self.text_drawn < len(self.text) and time.time() - self.time_elapsed > 0.005:
+            self.text_drawn += 1
+            self.time_elapsed = time.time()
+        text_to_draw = self.text[: self.text_drawn]
+
+        pyxel.rect(self.x, self.y, self.width, self.height, c.LIGHT)
+        pyxel.text(self.x + self.padding, self.y + self.padding, text_to_draw, c.DARK)
+
+        if self.game_state_property:
+            self.next_button.draw()
+
+    def is_clicked(self):
+        return self.is_shown and self.next_button.is_clicked()
+
+    def update(self, game_state):
+        if self.is_clicked() and self.game_state_property:
+            setattr(game_state, self.game_state_property, True)
