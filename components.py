@@ -56,16 +56,20 @@ class Button(Clickable):
         )
 
 
-class NextDayButton(Button):
+class NextDayButton:
+    next_button_text = "Call it a day >"
+    x = (
+        c.SCREEN_WIDTH
+        - len(next_button_text) * c.CHARACTER_WIDTH
+        - Button.text_padding * 2
+        - c.BORDER
+    )
+
     def __init__(self):
-        next_button_text = "Call it a day >"
         self.next_button = Button(
-            x=c.SCREEN_WIDTH
-            - len(next_button_text) * c.CHARACTER_WIDTH
-            - Button.text_padding * 2
-            - c.BORDER,
-            y=c.SCREEN_HEIGHT - 20,
-            text=next_button_text,
+            x=self.x,
+            y=c.BOTTOM_MENU_HEIGHT,
+            text=self.next_button_text,
         )
 
     def draw(self):

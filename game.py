@@ -9,14 +9,16 @@ from components import (
     IntroInfoBox,
     MiddleGameInfoBox,
     EndGameInfoBox,
-    Map,
 )
+
+from map import Map, MapButton
 
 
 class GameState:
     intro_screen_shown = False
     middle_game_screen_shown = False
     end_game_screen_shown = False
+    map_visible = False
 
 
 class App:
@@ -31,10 +33,11 @@ class App:
         self.sim = Pandemic()
         self.stats = GameStats()
         self.heading = Heading()
-        self.map = Map()
         self.intro = IntroInfoBox(filename="intro.txt")
         self.middle_game_info = MiddleGameInfoBox(filename="middle_game.txt")
         self.end_game_info = EndGameInfoBox(filename="end_game.txt")
+        self.map = Map()
+        self.map_button = MapButton()
 
         y_init = c.ROW_HEIGHT + c.BORDER
         self.places = [
@@ -55,6 +58,7 @@ class App:
         self.intro.update(self.game_state)
         self.middle_game_info.update(self.game_state)
         self.end_game_info.update(self.game_state)
+        self.map_button.update(self.game_state)
 
         for place in self.places:
             place.update(self.sim)
@@ -86,18 +90,18 @@ class App:
             self.end_game_info.draw()
             return
 
-        for place in self.places:
-            place.draw(self.sim)
+        if self.game_state.map_visible:
+            self.map.draw(self.sim)
 
-        self.heading.draw()
+        else:
+            self.stats.draw(sim=self.sim)
+            for place in self.places:
+                place.draw(self.sim)
+            self.heading.draw()
 
         # Draw next button
         self.next_button.draw()
-
-        # display stats
-        self.stats.draw(
-            sim=self.sim,
-        )
+        self.map_button.draw(self.game_state)
 
     def win(self):
         pyxel.rect(
