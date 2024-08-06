@@ -1,20 +1,21 @@
-from components import Hoverable, Button, NextDayButton
+from components import Clickable, Button, NextDayButton, ActionCheckbox
 import consts as c
 import pyxel
 import networkx as nx
 
 
 def map_scaler(x, y, x_min, x_max, y_min, y_max):
-    x = (x - x_min) / (x_max - x_min) * (c.SCREEN_WIDTH - c.BORDER - 10) + c.BORDER + 10
-    y = (
-        (y - y_min) / (y_max - y_min) * (c.SCREEN_HEIGHT - c.BORDER - 10)
-        + c.BORDER
-        + 10
-    )
+    # normalize x and y values to 0-1
+    x = (x - x_min) / (x_max - x_min)
+    y = (y - y_min) / (y_max - y_min)
+
+    # scale to screen size with border
+    x = x * (c.SCREEN_WIDTH - c.BORDER * 8) + c.BORDER * 4
+    y = y * (c.SCREEN_HEIGHT - c.BORDER * 8) + c.BORDER * 4
     return x, y
 
 
-class MapPlaceMarker(Hoverable):
+class MapPlaceMarker(Clickable):
     def __init__(self, x, y, place_name):
         self.x = x - 5
         self.y = y - 5
@@ -22,8 +23,10 @@ class MapPlaceMarker(Hoverable):
         self.height = 10
         self.place_name = place_name
 
-    def draw(self, prop_infected):
-        if prop_infected == 0:
+    def draw(self, game_state, prop_infected):
+        if game_state.map_selected_place == self.place_name:
+            color = c.DARK
+        elif prop_infected == 0:
             color = c.GREEN
         elif prop_infected < 0.1:
             color = c.ORANGE
@@ -31,13 +34,18 @@ class MapPlaceMarker(Hoverable):
             color = c.ALERT_COLOR
 
         if self.is_hovered():
-            pyxel.rect(self.x, self.y, self.width, self.height, c.HIGHLIGHT_COLOR_DARK)
-            pyxel.text(c.BORDER, c.BORDER, self.place_name, c.DARK)
+            pyxel.circ(self.x + 5, self.y + 5, self.width, c.HIGHLIGHT_COLOR_DARK)
         else:
-            pyxel.rect(self.x, self.y, self.width, self.height, color)
+            pyxel.circ(self.x + 5, self.y + 5, self.width / 2, color)
+
+        if self.is_clicked():
+            if game_state.map_selected_place == self.place_name:
+                game_state.map_selected_place = None
+            else:
+                game_state.map_selected_place = self.place_name
 
 
-class MapEdge(Hoverable):
+class MapEdge:
     def __init__(self, x1, y1, x2, y2):
         self.x1 = x1
         self.y1 = y1
@@ -72,11 +80,63 @@ class MapButton(Button):
             game_state.map_visible = not game_state.map_visible
 
 
+class SelectionBox:
+    def __init__(self):
+        self.action_checkboxes = []
+
+    def update(self, sim):
+        for checkbox in self.action_checkboxes:
+            checkbox.update(sim)
+
+    def draw(self, game_state, sim):
+        if game_state.map_selected_place:
+            pyxel.rect(x=c.BORDER, y=c.BORDER, w=110, h=75, col=c.LIGHT)
+            pyxel.rectb(x=c.BORDER, y=c.BORDER, w=110, h=75, col=c.DARK)
+            selected_place = sim.cities[game_state.map_selected_place]
+            place_stats = [
+                f"{selected_place.place_name}",
+                f"Caught Cooties: {selected_place.detected}",
+                f"Treated: {selected_place.treated}",
+                f"Homeschooled: {selected_place.dead}",
+                f"Anger: {selected_place.anger}/5",
+            ]
+            for idx, stat in enumerate(place_stats):
+                pyxel.text(
+                    x=c.BORDER + 5,
+                    y=c.BORDER + c.CHARACTER_HEIGHT * (1 + idx),
+                    s=stat,
+                    col=c.DARK,
+                )
+            # draw actions
+            self.action_checkboxes = []
+            for idx, action in enumerate(c.ACTIONS):
+                pyxel.text(
+                    x=c.BORDER + 5,
+                    y=c.BORDER + c.CHARACTER_HEIGHT * (len(place_stats) + 3 + idx),
+                    s=f"{c.ACTIONS[action]}: ",
+                    col=c.DARK,
+                )
+                checkbox = ActionCheckbox(
+                    x=c.BORDER + 5 + len(c.ACTIONS[action]) * c.CHARACTER_WIDTH + 5,
+                    y=c.BORDER + c.CHARACTER_HEIGHT * (len(place_stats) + 3 + idx),
+                    size=5,
+                    place_name=selected_place.place_name,
+                    action_name=action,
+                )
+                self.action_checkboxes.append(checkbox)
+                checkbox.draw(sim)
+
+
 class Map:
     def __init__(self):
         self.visible = True
+        self.selection_box = SelectionBox()
 
-    def draw(self, sim):
+    def update(self, sim):
+        if self.visible:
+            self.selection_box.update(sim)
+
+    def draw(self, game_state, sim):
 
         # draw background
         pyxel.rect(0, 0, c.SCREEN_WIDTH, c.SCREEN_HEIGHT, c.LIGHT)
@@ -114,5 +174,7 @@ class Map:
             # Normalize x and y values
             x, y = map_scaler(x, y, x_min, x_max, y_min, y_max)
             MapPlaceMarker(x, y, place.place_name).draw(
-                place.detected / place.population()
+                game_state=game_state, prop_infected=place.detected / place.population()
             )
+
+        self.selection_box.draw(game_state, sim)

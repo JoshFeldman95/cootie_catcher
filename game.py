@@ -17,6 +17,7 @@ class GameState:
     middle_game_screen_shown = False
     end_game_screen_shown = False
     map_visible = False
+    map_selected_place = None
 
 
 class App:
@@ -71,6 +72,7 @@ class App:
         self.intro.update(self.game_state)
         self.middle_game_info.update(self.game_state)
         self.end_game_info.update(self.game_state)
+        self.map.update(self.sim)
         self.map_button.update(self.game_state)
 
         for place in self.places:
@@ -104,7 +106,7 @@ class App:
             return
 
         if self.game_state.map_visible:
-            self.map.draw(self.sim)
+            self.map.draw(self.game_state, self.sim)
 
         else:
             self.stats.draw(sim=self.sim)
@@ -115,30 +117,6 @@ class App:
         # Draw next button
         self.next_button.draw()
         self.map_button.draw(self.game_state)
-
-    def win(self):
-        pyxel.rect(
-            c.SCREEN_WIDTH / 2 - 100 / 2, c.SCREEN_HEIGHT / 2 - 50 / 2, 100, 50, c.LIGHT
-        )
-        win_text = "You Win!"
-        pyxel.text(
-            c.SCREEN_WIDTH / 2 - len(win_text) / 2 * 4,
-            c.SCREEN_HEIGHT / 2 - 5,
-            win_text,
-            c.DARK,
-        )
-
-    def lose(self):
-        pyxel.rect(
-            c.SCREEN_WIDTH / 2 - 100 / 2, c.SCREEN_HEIGHT / 2 - 50 / 2, 100, 50, c.LIGHT
-        )
-        lose_text = "You Lose :("
-        pyxel.text(
-            c.SCREEN_WIDTH / 2 - len(lose_text) / 2 * 4,
-            c.SCREEN_HEIGHT / 2 - 5,
-            lose_text,
-            c.DARK,
-        )
 
 
 App()

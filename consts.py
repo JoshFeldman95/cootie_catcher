@@ -45,13 +45,6 @@ MIDDLE_CUTOFF = 10
 END_CUTOFF = 20
 
 
-ACTIONS = [
-    "restrict_travel",
-    "mass_testing",
-    "contact_tracing",
-    "lockdown",
-]
-
 WIN_THRESHOLD = 10
 LOSE_THRESHOLD = 20
 ROW_HEIGHT = 10
@@ -75,6 +68,13 @@ ORANGE = 9
 CHARACTER_WIDTH = 4
 CHARACTER_HEIGHT = 6
 
+ACTIONS = {
+    "restrict_travel": "Ban Playdates",
+    "mass_testing": "Test the Class",
+    "contact_tracing": "Quarantine",
+    "lockdown": "Close School",
+}
+
 COLUMNS = [
     ("School", "The name of the school."),
     ("Healthy", "The number of healthy kids (so we think...)"),
@@ -91,11 +91,14 @@ COLUMNS = [
         "Parent Anger",
         f"The amount parents are angry. If it gets to {ANGER_THRESHOLD}, watch out. You won't be able to take any more actions for {ANGER_THRESHOLD} turns.",
     ),
-    ("Ban Playdates", "This will stop kids from spreading cooties to other schools"),
-    ("Test the Class", "Figure out how many kids really have cooties"),
     (
-        "Quarantine",
+        ACTIONS["restrict_travel"],
+        "This will stop kids from spreading cooties to other schools",
+    ),
+    (ACTIONS["mass_testing"], "Figure out how many kids really have cooties"),
+    (
+        ACTIONS["contact_tracing"],
         f"Kids at this school won't spread cooties to other kids at this school, but we can only quarantine {CONTACT_TRACING_CAPACITY} kids.",
     ),
-    ("Close School", "No new infections! But parents will be angry..."),
+    (ACTIONS["lockdown"], "No new infections! But parents will be angry..."),
 ]
