@@ -308,3 +308,76 @@ class InfoBox:
     def update(self, game_state):
         if self.is_clicked() and self.game_state_property:
             setattr(game_state, self.game_state_property, True)
+
+
+class RandomizeActionButton:
+    def __init__(self, x, y, action_name):
+        self.randomize_button = Button(x=x, y=y, text="Randomize")
+        self.action_name = action_name
+
+    def draw(self):
+        self.randomize_button.draw()
+
+    def update(self, sim):
+        if self.randomize_button.is_clicked():
+            # get number of actions currently selected for action_name
+            selected_actions = [
+                city.control_measures[self.action_name] for city in sim.cities.values()
+            ]
+            num_selected = sum(selected_actions)
+
+            # get number of actions left in budget
+            actions_left = sim.action_budget - sim.action_count
+
+            # randomize actions
+            sim.randomize_actions(
+                action_name=self.action_name, n=num_selected + actions_left
+            )
+
+
+class ClearActionButton:
+    def __init__(self, x, y, action_name):
+        self.clear_button = Button(x=x, y=y, text="Clear")
+        self.action_name = action_name
+
+    def draw(self):
+        self.clear_button.draw()
+
+    def update(self, sim):
+        if self.clear_button.is_clicked():
+            for city in sim.cities.values():
+                city.control_measures[self.action_name] = False
+
+
+class SelectionButtons:
+    def __init__(self):
+        self.randomize_buttons = [
+            RandomizeActionButton(
+                x=c.COL_WIDTH * (7 + idx),
+                y=c.ROW_HEIGHT * (c.PLACE_COUNT + 1) + c.BORDER,
+                action_name=action,
+            )
+            for idx, action in enumerate(c.ACTIONS)
+        ]
+        self.clear_buttons = [
+            ClearActionButton(
+                x=c.COL_WIDTH * (7 + idx),
+                y=c.ROW_HEIGHT * (c.PLACE_COUNT + 1) + c.BORDER + Button.height + 5,
+                action_name=action,
+            )
+            for idx, action in enumerate(c.ACTIONS)
+        ]
+
+    def draw(self, game_state):
+        if game_state.map_visible:
+            return
+
+        for button in self.randomize_buttons + self.clear_buttons:
+            button.draw()
+
+    def update(self, game_state, sim):
+        if game_state.map_visible:
+            return
+
+        for button in self.randomize_buttons + self.clear_buttons:
+            button.update(sim)

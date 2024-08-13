@@ -79,12 +79,9 @@ class Pandemic:
                 },
             )
 
-        # create patient zero
-
-        # select a random element in cities
+        # create patient(s) zero
         random_place = random.choice(list(self.cities.values()))
-        # set infected to 1
-        random_place.infected = 1
+        random_place.infected = 5
 
     def update(self):
         self.day += 1
@@ -92,7 +89,9 @@ class Pandemic:
         # update days since last infection
         total_infections = 0
         for place_data in self.cities.values():
-            total_infections += place_data.infected
+            total_infections += (
+                place_data.infected + place_data.exposed + place_data.detected
+            )
 
         if total_infections > 0:
             self.days_since_last_infection = 0
@@ -273,33 +272,22 @@ class Pandemic:
             + f"Total dead: {totals.dead}|"
         )
 
-    def plot_network(self):
-        # Create a graph from the network
-        graph = nx.Graph(p.network)
+    def randomize_actions(self, action_name, n):
+        # get cities that are not in backlash
+        non_backlash_cities = [
+            place for place in self.cities.values() if not place.in_backlash
+        ]
 
-        # Specify the positions of the nodes
-        pos = nx.spring_layout(graph)
+        # Randomly select n places to apply the action to
+        places = random.sample(non_backlash_cities, n)
 
-        # Calculate the place populations
+        # deselect all actions for the selected action type
+        for place in self.cities.values():
+            place.control_measures[action_name] = False
 
-        # Scale the node sizes based on the place populations
-        node_sizes = [pop * 100 for pop in place_populations]
-
-        # Draw the graph with the specified positions and node sizes
-        nx.draw(
-            graph,
-            pos=pos,
-            with_labels=True,
-            node_size=node_sizes,
-            node_color="lightblue",
-            edge_color="gray",
-            linewidths=0.5,
-            alpha=0.7,
-        )
-        plt.tight_layout()
-
-        # Show the plot
-        plt.show()
+        # Apply the action to the selected places
+        for place in places:
+            place.control_measures[action_name] = True  # Apply the action
 
     @property
     def action_count(self):

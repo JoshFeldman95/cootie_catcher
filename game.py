@@ -7,6 +7,7 @@ from components import (
     Place,
     NextDayButton,
     InfoBox,
+    SelectionButtons,
 )
 
 from map import Map, MapButton
@@ -32,6 +33,7 @@ class App:
         self.sim = Pandemic()
         self.stats = GameStats()
         self.heading = Heading()
+        self.selection_buttons = SelectionButtons()
         self.intro = InfoBox(
             game_state_property="intro_screen_shown",
             filename="msgs/intro.txt",
@@ -74,6 +76,7 @@ class App:
         self.end_game_info.update(self.game_state)
         self.map.update(self.sim)
         self.map_button.update(self.game_state)
+        self.selection_buttons.update(game_state=self.game_state, sim=self.sim)
 
         for place in self.places:
             place.update(self.sim)
@@ -115,6 +118,7 @@ class App:
             self.heading.draw()
 
         # Draw next button
+        self.selection_buttons.draw(game_state=self.game_state)
         self.next_button.draw()
         self.map_button.draw(self.game_state)
 
